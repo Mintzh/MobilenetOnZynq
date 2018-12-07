@@ -1,12 +1,12 @@
 weight for counting
 note that layer7-13 are the same
-
+this is a 224 edition
 total float parms 1258627 5MB
 minimum unit?
 net note:
 input 224*224*3
 Conv2  3*3*24+24(bias) = 672  relu6
-(1,2,2,1) pad1 -> right 0  bottom 0
+(1,2,2,1) pad1->leftrightabovebottom1 0
 *****************************************
 outin 112*112*24
 
