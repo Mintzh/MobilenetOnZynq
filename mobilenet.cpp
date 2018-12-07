@@ -1,6 +1,5 @@
 #include "stdafx.h"
 
-#include<stdio.h>
 #include "convlayer.h"
 #include <cmath>
 #define Heatmap_Kernel 1
@@ -40,7 +39,9 @@ inline void sigmoidmul(paratype* dataforsigm, int num)
 
 int main()
 {
-	printf("hh");
+	time_t start, end;
+	start = time(NULL);
+	
 	paratype* graphin, * graghout,*graphtest,
 		*heatmap,*offset2, *displacement_fwd, *displacement_bwd,
 		*heatmap_2_weight, *heatmap_2_bias,
@@ -100,17 +101,22 @@ int main()
 	graghout = new paratype[convoutsize];
 
 	convmodule(graphin, graghout);
-	printf("convcomplet/n");
+	end = time(NULL);
+
+	printf("duration: %lf\n", difftime(end, start));
+	printf("convcomplet\n");
 	
+   //heatmap need sigmoid
 	outlayer_norelu(IN graghout, heatmap_2_weight, heatmap_2_bias, heatmap, Conv13_poiChannel, Conv13_poioutH, Heatmap_Kernel, Heatmap_Channel, Heatmap_outH, Heatmap_Stride);
 	sigmoidmul(heatmap, Heatmap_outH*Heatmap_outH*Heatmap_Channel);
+	
 	outlayer_norelu(IN graghout, offset_2_weight, offset_2_bias, offset2, Conv13_poiChannel, Conv13_poioutH, offset_2_Kernel, offset_2_Channel, offset_2_outH, offset_2_Stride);
 
 	outlayer_norelu(IN graghout, displacement_fwd_weight, displacement_fwd_bias, displacement_fwd, Conv13_poiChannel, Conv13_poioutH, disp_Kernel, disp_Channel, disp_outH, disp_Stride);
 
 	outlayer_norelu(IN graghout, displacement_bwd_weight, displacement_bwd_bias, displacement_bwd, Conv13_poiChannel, Conv13_poioutH, disp_Kernel, disp_Channel, disp_outH, disp_Stride);
 
-	int checkoffset = (12*33)* 17;
+	int checkoffset = (2*33)* 17;
 	int numcheck = 17;
 	printf("networkoutput\n");
 	for (int i = 0; i <numcheck; i++)
@@ -124,5 +130,8 @@ int main()
 		printf("%f,", graphtest[checkoffset + i]);
 
 	}
+	end = time(NULL);
+	printf("duration: %lf\n", difftime(end, start));
+
 	return 0;
 }
