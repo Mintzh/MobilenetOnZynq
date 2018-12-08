@@ -39,8 +39,9 @@ inline void sigmoidmul(paratype* dataforsigm, int num)
 
 int main()
 {
-	time_t start, end;
-	start = time(NULL);
+	clock_t start, end;
+	float duration;
+	start = clock();
 	
 	paratype* graphin, * graghout,*graphtest,
 		*heatmap,*offset2, *displacement_fwd, *displacement_bwd,
@@ -101,10 +102,10 @@ int main()
 	graghout = new paratype[convoutsize];
 
 	convmodule(graphin, graghout);
-	end = time(NULL);
+	end = clock();
 
-	printf("duration: %lf\n", difftime(end, start));
-	printf("convcomplet\n");
+	duration = (double)(end - start) / CLOCKS_PER_SEC;
+	printf("convcomplet%lf\n",duration);
 	
    //heatmap need sigmoid
 	outlayer_norelu(IN graghout, heatmap_2_weight, heatmap_2_bias, heatmap, Conv13_poiChannel, Conv13_poioutH, Heatmap_Kernel, Heatmap_Channel, Heatmap_outH, Heatmap_Stride);
@@ -130,8 +131,9 @@ int main()
 		printf("%f,", graphtest[checkoffset + i]);
 
 	}
-	end = time(NULL);
-	printf("duration: %lf\n", difftime(end, start));
+	end = clock();
+	duration = (double)(end - start) / CLOCKS_PER_SEC;
+	printf("dep11: %lf\n", duration);
 
 	return 0;
 }

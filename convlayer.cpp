@@ -3,7 +3,11 @@
 #include <stdio.h>
 #include<assert.h>
 //implement the convolution
-time_t start, end;
+
+clock_t startclk, finishclk;
+double  duration;
+double durationprod;
+double  prodtime;
 const char* Conv2weightdir = "./wbin/Conv2d_0_weights.bin";
 const char* Conv2biasdir = "./wbin/Conv2d_0_biases.bin";
 
@@ -100,6 +104,18 @@ inline void relu6(paratype* dataforrelu)
 		*dataforrelu = 6;
 	}
 }
+inline paratype relu6_num(paratype dataforrelu)
+{
+	if (dataforrelu<0)
+	{
+		return 0;
+	}
+	else if (dataforrelu>6)
+	{
+		return 6;
+	}
+	return dataforrelu;
+}
 inline void relu6mul(paratype* dataforrelu, int num)
 {
 	for (int i = 0; i<num; i++)
@@ -128,6 +144,9 @@ inline void tensorprod_norelu(paratype* graph, paratype* convweight, paratype* r
 
 inline void tensorprod(paratype* graph, paratype* convweight, paratype* result, int prodnum, int woffset,paratype bias)
 {
+	startclk = clock();
+		
+	
 	paratype product = 0;
 	for (int inindex = 0; inindex<prodnum; inindex++)
 	{
@@ -135,6 +154,8 @@ inline void tensorprod(paratype* graph, paratype* convweight, paratype* result, 
 	}
 	*result = product + bias;
 	relu6(result);
+	finishclk = clock();
+	durationprod+= (double)(finishclk - startclk) / CLOCKS_PER_SEC;
 	//printf("from%f\n", product);
 }
 
@@ -205,6 +226,7 @@ inline void setzero(paratype* datablock, int num)
 static int firstread = 0;
 void convmodule(IN paratype* graphin, OUT paratype* grahout)
 {
+	prodtime = 0;
 	/*read parameters*/
 	static paratype Conv2W[Conv2Kernel*Conv2Kernel*graphinC*Conv2Channel];
 	static paratype Conv2B[Conv2Channel];
@@ -521,23 +543,26 @@ void convmodule(IN paratype* graphin, OUT paratype* grahout)
 	//debugpr(Conv1_poiB, 1);
 	//paratype* Conv2out=new paratype[Conv2outH*Conv2outH*Conv2Channel];
 	//setzero(Conv2out, Conv2outH*Conv2outH*Conv2Channel);
-	start = time(NULL);
+	startclk = clock();
 	conv2layer(IN graphin, Conv2W, Conv2B, OUT conv1_result);
-	end = time(NULL);
-	printf("conv2: %lf\n", difftime(end, start));
+	finishclk = clock();
+	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	printf("conv2: %lf\n", duration);
 	//separable 1
-	start = time(NULL);
+	startclk = clock();
 	depthwiselayer(IN conv1_result, Conv1_depW, Conv1_depB, OUT dep1_result,
 		Conv2Channel, Conv2outH, Conv1_depKernel, Conv1_depChannel, Conv1_depoutH, Conv1_depStride);
-	end = time(NULL);
-	printf("dep1: %lf\n", difftime(end, start));
+	finishclk = clock();
+	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	printf("dep1: %lf\n", duration);
 	//printf("dep1\n");
 	//debugpr(dep1_result, 24);
 	//pointwise
-	start = time(NULL);
+	startclk = clock();
 	pointwiselayer_nopad(IN dep1_result, Conv1_poiW, Conv1_poiB, poi1_result, Conv1_depChannel, Conv1_depoutH, Conv1_poiKernel, Conv1_poiChannel, Conv1_poioutH);
-	end = time(NULL);
-	printf("poi1: %lf\n", difftime(end, start));
+	finishclk = clock();
+	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	printf("poi1: %lf\n", duration);
 	//delete[] dep1_result;
 	/*
 	printf("weight\n");
@@ -603,28 +628,32 @@ void convmodule(IN paratype* graphin, OUT paratype* grahout)
 	//pointwise
 	pointwiselayer_nopad(IN dep7_result, Conv9_poiW, Conv9_poiB, poi7_result, Conv9_depChannel, Conv9_depoutH, Conv9_poiKernel, Conv9_poiChannel, Conv9_poioutH);
 
-	start = time(NULL);
+	startclk = clock();
 	//separable 10
 	depthwiselayer(IN poi7_result, Conv10_depW, Conv10_depB, OUT dep7_result,
 		Conv9_poiChannel, Conv9_poioutH, Conv10_depKernel, Conv10_depChannel, Conv10_depoutH, Conv10_depStride);
-	end = time(NULL);
-	printf("dep10: %lf\n", difftime(end, start));
+	finishclk = clock();
+	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	printf("dep10: %lf\n", duration);
 	//pointwise
-	start = time(NULL);
+	startclk = clock();
 	pointwiselayer_nopad(IN dep7_result, Conv10_poiW, Conv10_poiB, poi7_result, Conv10_depChannel, Conv10_depoutH, Conv10_poiKernel, Conv10_poiChannel, Conv10_poioutH);
-	end = time(NULL);
-	printf("poi10: %lf\n", difftime(end, start));
+	finishclk = clock();
+	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	printf("poi10: %lf\n", duration);
 	//separable 11
-	start = time(NULL);
+	startclk = clock();
 	depthwiselayer(IN poi7_result, Conv11_depW, Conv11_depB, OUT dep7_result,
 		Conv10_poiChannel, Conv10_poioutH, Conv11_depKernel, Conv11_depChannel, Conv11_depoutH, Conv11_depStride);
-	end = time(NULL);
-	printf("dep11: %lf\n", difftime(end, start));
+	finishclk = clock();
+	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	printf("dep11: %lf\n", duration);
 	//pointwise
-	start = time(NULL);
+	startclk = clock();
 	pointwiselayer_nopad(IN dep7_result, Conv11_poiW, Conv11_poiB, poi7_result, Conv11_depChannel, Conv11_depoutH, Conv11_poiKernel, Conv11_poiChannel, Conv11_poioutH);
-	end = time(NULL);
-	printf("poi11: %lf\n", difftime(end, start));
+	finishclk = clock();
+	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	printf("poi11: %lf\n", duration);
 	//separable 12
 	depthwiselayer(IN poi7_result, Conv12_depW, Conv12_depB, OUT dep7_result,
 		Conv11_poiChannel, Conv11_poioutH, Conv12_depKernel, Conv12_depChannel, Conv12_depoutH, Conv12_depStride);
@@ -638,7 +667,7 @@ void convmodule(IN paratype* graphin, OUT paratype* grahout)
 
 	//pointwise
 	pointwiselayer_nopad(IN dep7_result, Conv13_poiW, Conv13_poiB, grahout, Conv13_depChannel, Conv13_depoutH, Conv13_poiKernel, Conv13_poiChannel, Conv13_poioutH);
-
+	printf("poiproddurationsum,:%lf\n", prodtime);
 }
 
 //graghin HWC
@@ -1011,37 +1040,42 @@ void depthwiselayer(IN paratype* graphin, paratype* depthwiseW, paratype* depthw
 void pointwiselayer_nopad(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout, int inputc, int inputH, int depKernel, int depChannel, int depoutH)
 {
 	//we have to care about cache use!
-
+	durationprod = 0;
 	//paratype *convkernel = new paratype[depKernel*depKernel*inputc];
 	int outoffset = depoutH * depChannel;
 	int prodnum = depKernel * depKernel*inputc;
 	//paratype *onepatch = new paratype[depKernel*depKernel*inputc];
-
 	for (int hi = 0; hi < depoutH; hi++)  //height
 	{
 		for (int j = 0; j < depoutH; j++)  //width
 		{
+
+			for (int c = 0; c < depChannel; c++)  //channel
+			{
 			//input data reuse
 
 			//copyval(onepatch, graphin + (j + hi * inputH)*inputc, inputc);
 
 
-			for (int c = 0; c < depChannel; c++)  //channel
-			{
+
 				//copyval_offset(convkernel, depthwiseW + c, depKernel*depKernel*inputc, depChannel);
 				//shoot
 				//conv and add bias
 			
 				tensorprod(graphin + (j + hi * inputH)*inputc, depthwiseW + c,
 					Convout + hi * outoffset + j * depChannel + c, prodnum, depChannel,depthwiseB[c]);
+
+
+				//relu6(result);
+				//printf("from%f\n", product);
 				//relu
 				//relu6(Convout + hi * (depoutH*depChannel) + j * depChannel + c);
 
 			}
 		}
-
 	}
-	
+	printf("poiprodduration,:%lf\n", durationprod);
+	prodtime += durationprod;
 }
 
 void outlayer_norelu(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout, int inputc, int inputH, int depKernel, int depChannel, int depoutH, int depStride)
