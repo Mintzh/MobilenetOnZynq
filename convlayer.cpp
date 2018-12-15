@@ -1,7 +1,11 @@
-#include "stdafx.h"
 #include "convlayer.h"
 #include <stdio.h>
 #include<assert.h>
+#include <time.h>
+#include <sys/time.h>
+#include<sys/sem.h>
+#include<pthread.h>
+
 //implement the convolution
 
 clock_t startclk, finishclk;
@@ -131,48 +135,240 @@ inline void relu6mul(paratype* dataforrelu, int num)
 	}
 }
 //this function calculate prod
-inline void tensorprod_norelu(paratype* graph, paratype* convweight, paratype* result, int prodnum, int woffset, paratype bias)
+inline void tensorprod_norelu(paratype* graph, paratype* convweight, paratype* result,const int prodnum,const int woffset, paratype bias)
 {
 	paratype product = 0;
-	for (int inindex = 0; inindex<prodnum; inindex++)
+	for (int inindex = 0; inindex<prodnum; inindex+=24)
 	{
-		product += graph[inindex] * convweight[inindex*woffset];
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=woffset;
 	}
 	*result = product + bias;
 	//printf("from%f\n", product);
 }
 
-inline void tensorprod(paratype* graph, paratype* convweight, paratype* result, int prodnum, int woffset,paratype bias)
+inline void tensorprod(paratype* graph, paratype* convweight, paratype* result,const int prodnum,paratype bias)
 {
-	startclk = clock();
+	//startclk = clock();
 		
 	
 	paratype product = 0;
-	for (int inindex = 0; inindex<prodnum; inindex++)
+	for (int inindex = 0; inindex<prodnum; inindex+=24)
 	{
-		product = product + graph[inindex] * convweight[inindex*woffset];
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight++;
 	}
-	*result = product + bias;
-	relu6(result);
-	finishclk = clock();
-	durationprod+= (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	*result = relu6_num(product + bias);
+	//relu6(result);
+	//finishclk = clock();
+	//durationprod+= (double)(finishclk - startclk) / CLOCKS_PER_SEC;
 	//printf("from%f\n", product);
 }
 
-inline void tensorprod_offsetw(paratype* graph, paratype* convweight, paratype* result, int prodnum,int offset, paratype bias)
+inline void tensorprod_offsetw(paratype* graph, paratype* convweight, paratype* result,const int prodnum,const int offset, paratype bias)
 {
 	paratype product = 0;
-	for (int inindex = 0; inindex<prodnum; inindex++)
+	for (int inindex = 0; inindex<prodnum; inindex+=9)
 	{
-		product += graph[inindex] * convweight[inindex*offset];
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=offset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=offset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=offset;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=offset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=offset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=offset;
+
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=offset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=offset;
+		product+= (*graph) * (*convweight);
+		graph++;
+		convweight+=offset;
 	}
-	*result = product + bias;
-	relu6(result);
+	*result = relu6_num(product + bias);
+	//relu6(result);
 	//printf("from%f\n", product);
 }
 
 
-inline void tensorprod_depwise(paratype* graph, paratype* convweight, paratype* result, int channels, int kernelsize, paratype* bias)
+inline void tensorprod_depwise(paratype* graph, paratype* convweight, paratype* result,const int channels,const int kernelsize, paratype* bias)
 {
 	for (int cind = 0; cind < channels; cind++)
 	{
@@ -193,24 +389,25 @@ inline void tensorprod_depwise(paratype* graph, paratype* convweight, paratype* 
 	//printf("from%f\n", product);
 }
 
+/*
 //this function add bias to a block
-inline void bias(paratype* data, paratype* bias, int datanum)
+inline void bias(paratype* data, paratype* bias,const int datanum)
 {
 	for (int inindex = 0; inindex<datanum; inindex++)
 	{
 		data[inindex] += *bias;
 	}
 }
-
+*/
 //copy value to array
-inline void copyval(paratype* indata, paratype* mem, int datanum)
+inline void copyval(paratype* indata, paratype* mem,const int datanum)
 {
 	for (int inindex = 0; inindex<datanum; inindex++)
 	{
 		indata[inindex] = mem[inindex];
 	}
 }
-inline void copyval_offset(paratype* indata, paratype* mem, int datanum, int offset)
+inline void copyval_offset(paratype* indata, paratype* mem,const int datanum,const int offset)
 {
 	for (int inindex = 0; inindex<datanum; inindex++)
 	{
@@ -543,26 +740,26 @@ void convmodule(IN paratype* graphin, OUT paratype* grahout)
 	//debugpr(Conv1_poiB, 1);
 	//paratype* Conv2out=new paratype[Conv2outH*Conv2outH*Conv2Channel];
 	//setzero(Conv2out, Conv2outH*Conv2outH*Conv2Channel);
-	startclk = clock();
+	//startclk = clock();
 	conv2layer(IN graphin, Conv2W, Conv2B, OUT conv1_result);
-	finishclk = clock();
-	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
-	printf("conv2: %lf\n", duration);
+	//finishclk = clock();
+	//duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	//printf("conv2: %lf\n", duration);
 	//separable 1
-	startclk = clock();
+	//startclk = clock();
 	depthwiselayer(IN conv1_result, Conv1_depW, Conv1_depB, OUT dep1_result,
 		Conv2Channel, Conv2outH, Conv1_depKernel, Conv1_depChannel, Conv1_depoutH, Conv1_depStride);
-	finishclk = clock();
-	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
-	printf("dep1: %lf\n", duration);
+	//finishclk = clock();
+	//duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	//printf("dep1: %lf\n", duration);
 	//printf("dep1\n");
 	//debugpr(dep1_result, 24);
 	//pointwise
-	startclk = clock();
+	//startclk = clock();
 	pointwiselayer_nopad(IN dep1_result, Conv1_poiW, Conv1_poiB, poi1_result, Conv1_depChannel, Conv1_depoutH, Conv1_poiKernel, Conv1_poiChannel, Conv1_poioutH);
-	finishclk = clock();
-	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
-	printf("poi1: %lf\n", duration);
+	//finishclk = clock();
+	//duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	//printf("poi1: %lf\n", duration);
 	//delete[] dep1_result;
 	/*
 	printf("weight\n");
@@ -609,9 +806,14 @@ void convmodule(IN paratype* graphin, OUT paratype* grahout)
 	//separable 7
 	depthwiselayer(IN poi7_result, Conv7_depW, Conv7_depB, OUT dep7_result,
 		Conv6_poiChannel, Conv6_poioutH, Conv7_depKernel, Conv7_depChannel, Conv7_depoutH, Conv7_depStride);
-
+        //printf("input\n");
+        //debugpr(dep7_result, 20);
+	//printf("input\n");
+        //debugpr(Conv7_poiW, 20);
 	//pointwise
 	pointwiselayer_nopad(IN dep7_result, Conv7_poiW, Conv7_poiB, poi7_result, Conv7_depChannel, Conv7_depoutH, Conv7_poiKernel, Conv7_poiChannel, Conv7_poioutH);
+	//printf("padpoi7\n");    
+        //debugpr(poi7_result, 20);
 
 
 	//separable 8
@@ -620,54 +822,64 @@ void convmodule(IN paratype* graphin, OUT paratype* grahout)
 
 	//pointwise
 	pointwiselayer_nopad(IN dep7_result, Conv8_poiW, Conv8_poiB, poi7_result, Conv8_depChannel, Conv8_depoutH, Conv8_poiKernel, Conv8_poiChannel, Conv8_poioutH);
-
+	//printf("padpoi8\n");    
+        //debugpr(poi7_result, 20);
 	//separable 9
 	depthwiselayer(IN poi7_result, Conv9_depW, Conv9_depB, OUT dep7_result,
 		Conv8_poiChannel, Conv8_poioutH, Conv9_depKernel, Conv9_depChannel, Conv9_depoutH, Conv9_depStride);
 
 	//pointwise
 	pointwiselayer_nopad(IN dep7_result, Conv9_poiW, Conv9_poiB, poi7_result, Conv9_depChannel, Conv9_depoutH, Conv9_poiKernel, Conv9_poiChannel, Conv9_poioutH);
-
-	startclk = clock();
+	//printf("padpoi9\n");    
+        //debugpr(poi7_result, 20);
+	//startclk = clock();
 	//separable 10
 	depthwiselayer(IN poi7_result, Conv10_depW, Conv10_depB, OUT dep7_result,
 		Conv9_poiChannel, Conv9_poioutH, Conv10_depKernel, Conv10_depChannel, Conv10_depoutH, Conv10_depStride);
-	finishclk = clock();
-	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
-	printf("dep10: %lf\n", duration);
+	//finishclk = clock();
+	//duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	//printf("dep10: %lf\n", duration);
 	//pointwise
 	startclk = clock();
 	pointwiselayer_nopad(IN dep7_result, Conv10_poiW, Conv10_poiB, poi7_result, Conv10_depChannel, Conv10_depoutH, Conv10_poiKernel, Conv10_poiChannel, Conv10_poioutH);
-	finishclk = clock();
-	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
-	printf("poi10: %lf\n", duration);
+	//printf("padpoi10\n");    
+        //debugpr(poi7_result, 20);	
+	//finishclk = clock();
+	//duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	//printf("poi10: %lf\n", duration);
 	//separable 11
-	startclk = clock();
+	//startclk = clock();
 	depthwiselayer(IN poi7_result, Conv11_depW, Conv11_depB, OUT dep7_result,
 		Conv10_poiChannel, Conv10_poioutH, Conv11_depKernel, Conv11_depChannel, Conv11_depoutH, Conv11_depStride);
-	finishclk = clock();
-	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
-	printf("dep11: %lf\n", duration);
+	//finishclk = clock();
+	//duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	//printf("dep11: %lf\n", duration);
 	//pointwise
 	startclk = clock();
 	pointwiselayer_nopad(IN dep7_result, Conv11_poiW, Conv11_poiB, poi7_result, Conv11_depChannel, Conv11_depoutH, Conv11_poiKernel, Conv11_poiChannel, Conv11_poioutH);
-	finishclk = clock();
-	duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
-	printf("poi11: %lf\n", duration);
+	//printf("padpoi11\n");    
+        //debugpr(poi7_result, 20);
+        //finishclk = clock();
+	//duration = (double)(finishclk - startclk) / CLOCKS_PER_SEC;
+	//printf("poi11: %lf\n", duration);
 	//separable 12
 	depthwiselayer(IN poi7_result, Conv12_depW, Conv12_depB, OUT dep7_result,
 		Conv11_poiChannel, Conv11_poioutH, Conv12_depKernel, Conv12_depChannel, Conv12_depoutH, Conv12_depStride);
 
 	//pointwise
 	pointwiselayer_nopad(IN dep7_result, Conv12_poiW, Conv12_poiB, poi7_result, Conv12_depChannel, Conv12_depoutH, Conv12_poiKernel, Conv12_poiChannel, Conv12_poioutH);
-
+        //printf("padpoi12\n");    
+       // debugpr(poi7_result, 200);
 	//separable 13
 	depthwiselayer(IN poi7_result, Conv13_depW, Conv13_depB, OUT dep7_result,
 		Conv12_poiChannel, Conv12_poioutH, Conv13_depKernel, Conv13_depChannel, Conv13_depoutH, Conv13_depStride);
-
+ 	//printf("paddep13\n");    
+        //debugpr(dep7_result, 20);
 	//pointwise
 	pointwiselayer_nopad(IN dep7_result, Conv13_poiW, Conv13_poiB, grahout, Conv13_depChannel, Conv13_depoutH, Conv13_poiKernel, Conv13_poiChannel, Conv13_poioutH);
-	printf("poiproddurationsum,:%lf\n", prodtime);
+	//printf("poiproddurationsum,:%lf\n", prodtime);
+        //printf("padpoi13\n");    
+        //debugpr(grahout, 20);
 }
 
 //graghin HWC
@@ -767,7 +979,7 @@ void conv2layer(IN paratype* graphin, paratype* Conv2W, paratype* Conv2B, OUT pa
 				else if (j == 0)
 				{  //add the right two cols
 					int offset = 0;
-					assert((Conv2Stride*hi + Conv2Kernel - 1)*graphinW*graphinC < 513 * 513 * 3);
+					//assert((Conv2Stride*hi + Conv2Kernel - 1)*graphinW*graphinC < 513 * 513 * 3);
 					for (int patchind = 0; patchind < Conv2Kernel; patchind++)
 					{
 						setzero(onepatch + offset, graphinC);
@@ -781,7 +993,7 @@ void conv2layer(IN paratype* graphin, paratype* Conv2W, paratype* Conv2B, OUT pa
 				else if (hi == 0)
 				{  //add the upper two rows
 					int offset = 0;
-					assert((Conv2Stride*j + (Conv2Kernel - 1) * graphinW - 1)*graphinC, graphinC * Conv2Kernel< 513 * 513 * 3);
+					//assert((Conv2Stride*j + (Conv2Kernel - 1) * graphinW - 1)*graphinC, graphinC * Conv2Kernel< 513 * 513 * 3);
 					setzero(onepatch, graphinC*Conv2Kernel);
 					offset += graphinC * Conv2Kernel;
 					for (int patchind = 0; patchind < Conv2Kernel - 1; patchind++)
@@ -794,7 +1006,7 @@ void conv2layer(IN paratype* graphin, paratype* Conv2W, paratype* Conv2B, OUT pa
 				else if (j == Conv2outH - 1)
 				{  //add the right two cols
 					int offset = 0;
-					assert(((Conv2Stride * hi + (Conv2Kernel - 1)) * graphinW - 2)*graphinC< 513 * 513 * 3);
+					//assert(((Conv2Stride * hi + (Conv2Kernel - 1)) * graphinW - 2)*graphinC< 513 * 513 * 3);
 					for (int patchind = 0; patchind < Conv2Kernel; patchind++)
 					{
 						copyval(onepatch + offset,
@@ -807,7 +1019,7 @@ void conv2layer(IN paratype* graphin, paratype* Conv2W, paratype* Conv2B, OUT pa
 				else if (hi == Conv2outH - 1)
 				{  //add the lower two rows
 					int offset = 0;
-					assert(((graphinW - 2 + Conv2Kernel - 2) * graphinW + Conv2Stride * j - 1)*graphinC< 513 * 513 * 3);
+					//assert(((graphinW - 2 + Conv2Kernel - 2) * graphinW + Conv2Stride * j - 1)*graphinC< 513 * 513 * 3);
 					for (int patchind = 0; patchind < Conv2Kernel - 1; patchind++)
 					{
 						copyval(onepatch + offset,
@@ -821,7 +1033,7 @@ void conv2layer(IN paratype* graphin, paratype* Conv2W, paratype* Conv2B, OUT pa
 			else
 			{
 
-				assert((Conv2Stride * (j - 1) + Conv2Kernel - 1 + (1 + Conv2Stride * (hi - 1) + Conv2Kernel - 1)*graphinW)*graphinC< 513 * 513 * 3);
+				//assert((Conv2Stride * (j - 1) + Conv2Kernel - 1 + (1 + Conv2Stride * (hi - 1) + Conv2Kernel - 1)*graphinW)*graphinC< 513 * 513 * 3);
 				for (int ph = 0; ph < Conv2Kernel; ph++)  //without paddle
 				{
 					for (int pw = 0; pw < Conv2Kernel; pw++)
@@ -838,7 +1050,7 @@ void conv2layer(IN paratype* graphin, paratype* Conv2W, paratype* Conv2B, OUT pa
 
 				//copyval_offset(convkernel, Conv2W + c, Conv2Kernel*Conv2Kernel*graphinC, Conv2Channel);
 				//conv and add bias
-				assert(hi * (Conv2outH*Conv2Channel) + j * Conv2Channel + c < 257 * 257 * 24);
+				//assert(hi * (Conv2outH*Conv2Channel) + j * Conv2Channel + c < 257 * 257 * 24);
 				tensorprod_offsetw(onepatch, Conv2W + c,
 					Conv2out + hi * (Conv2outH*Conv2Channel) + j * Conv2Channel + c, prodnum, Conv2Channel, Conv2B[c]);
 				//relu
@@ -846,7 +1058,6 @@ void conv2layer(IN paratype* graphin, paratype* Conv2W, paratype* Conv2B, OUT pa
 				/*
 				printf("weight\n");
 				debugpr(convkernel, 27);
-
 				printf("patchzero\n");
 				debugpr(Conv2out + hi * (Conv2outH*Conv2Channel) + j * Conv2Channel + c, 1);
 				*/
@@ -861,7 +1072,7 @@ void conv2layer(IN paratype* graphin, paratype* Conv2W, paratype* Conv2B, OUT pa
 
 //careful for padding 
 //this is a vec product based implemention
-void depthwiselayer(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout, int inputc, int inputH, int depKernel, int depChannel, int depoutH, int depStride)
+void depthwiselayer(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout,const int inputc,const int inputH,const int depKernel,const int depChannel,const int depoutH,const int depStride)
 {
 	//we have to care about cache use!
 
@@ -955,7 +1166,7 @@ void depthwiselayer(IN paratype* graphin, paratype* depthwiseW, paratype* depthw
 				else if (j == 0)
 				{  //add the right two cols
 					int offset = 0;
-					assert((depStride*hi + depKernel - 2)*inputH*inputc < inputH*inputH*inputc);
+					//assert((depStride*hi + depKernel - 2)*inputH*inputc < inputH*inputH*inputc);
 					for (int patchind = 0; patchind < depKernel; patchind++)
 					{
 						setzero(onepatch + offset, inputc);
@@ -969,7 +1180,7 @@ void depthwiselayer(IN paratype* graphin, paratype* depthwiseW, paratype* depthw
 				else if (hi == 0)
 				{  //add the upper two rows
 					int offset = 0;
-					assert((depStride*j + (depKernel - 1) * inputH - 1)*inputc, inputc * depKernel< inputH*inputH*inputc);
+					//assert((depStride*j + (depKernel - 1) * inputH - 1)*inputc, inputc * depKernel< inputH*inputH*inputc);
 					setzero(onepatch, inputc*depKernel);
 					offset += inputc * depKernel;
 					for (int patchind = 0; patchind < depKernel - 1; patchind++)
@@ -982,7 +1193,7 @@ void depthwiselayer(IN paratype* graphin, paratype* depthwiseW, paratype* depthw
 				else if (j == depoutH - 1)
 				{  //add the right two cols
 					int offset = 0;
-					assert(((depStride * hi + (depKernel - 1)) * inputH - 2)*inputc< inputH*inputH*inputc);
+					//assert(((depStride * hi + (depKernel - 1)) * inputH - 2)*inputc< inputH*inputH*inputc);
 					for (int patchind = 0; patchind < depKernel; patchind++)
 					{
 						copyval(onepatch + offset,
@@ -995,7 +1206,7 @@ void depthwiselayer(IN paratype* graphin, paratype* depthwiseW, paratype* depthw
 				else if (hi == depoutH - 1)
 				{  //add the lower two rows
 					int offset = 0;
-					assert(((inputH - 2 + depKernel - 2) * inputH + depStride * j - 1)*inputc< inputH*inputH*inputc);
+					//assert(((inputH - 2 + depKernel - 2) * inputH + depStride * j - 1)*inputc< inputH*inputH*inputc);
 					for (int patchind = 0; patchind < depKernel - 1; patchind++)
 					{
 						copyval(onepatch + offset,
@@ -1037,13 +1248,13 @@ void depthwiselayer(IN paratype* graphin, paratype* depthwiseW, paratype* depthw
 	//delete[]convkernel;
 }
 
-void pointwiselayer_nopad(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout, int inputc, int inputH, int depKernel, int depChannel, int depoutH)
+void pointwiselayer_nopad(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout,const int inputc,const int inputH,const int depKernel,const int depChannel,const int depoutH)
 {
 	//we have to care about cache use!
 	durationprod = 0;
 	//paratype *convkernel = new paratype[depKernel*depKernel*inputc];
-	int outoffset = depoutH * depChannel;
-	int prodnum = depKernel * depKernel*inputc;
+	const int outoffset = depoutH * depChannel;
+	const int prodnum = depKernel * depKernel*inputc;
 	//paratype *onepatch = new paratype[depKernel*depKernel*inputc];
 	for (int hi = 0; hi < depoutH; hi++)  //height
 	{
@@ -1062,8 +1273,8 @@ void pointwiselayer_nopad(IN paratype* graphin, paratype* depthwiseW, paratype* 
 				//shoot
 				//conv and add bias
 			
-				tensorprod(graphin + (j + hi * inputH)*inputc, depthwiseW + c,
-					Convout + hi * outoffset + j * depChannel + c, prodnum, depChannel,depthwiseB[c]);
+				tensorprod(graphin + (j + hi * inputH)*inputc, depthwiseW + c*inputc,
+					Convout + hi * outoffset + j * depChannel + c, prodnum,depthwiseB[c]);
 
 
 				//relu6(result);
@@ -1074,15 +1285,15 @@ void pointwiselayer_nopad(IN paratype* graphin, paratype* depthwiseW, paratype* 
 			}
 		}
 	}
-	printf("poiprodduration,:%lf\n", durationprod);
-	prodtime += durationprod;
+	//printf("poiprodduration,:%lf\n", durationprod);
+	//prodtime += durationprod;
 }
 
-void outlayer_norelu(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout, int inputc, int inputH, int depKernel, int depChannel, int depoutH, int depStride)
+void outlayer_norelu(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout,const int inputc,const int inputH,const int depKernel,const int depChannel,const int depoutH, const int depStride)
 {
 	//we have to care about cache use!
-	int outoffset = depoutH * depChannel;
-	int prodnum = depKernel*depKernel*inputc;
+	const int outoffset = depoutH * depChannel;
+	const int prodnum = depKernel*depKernel*inputc;
 	//paratype *convkernel = new paratype[depKernel*depKernel*inputc];
 	//paratype *onepatch = new paratype[depKernel*depKernel*inputc];
 	for (int hi = 0; hi < depoutH; hi++)  //height
@@ -1109,4 +1320,3 @@ void outlayer_norelu(IN paratype* graphin, paratype* depthwiseW, paratype* depth
 	//delete[]onepatch;
 	//delete[]convkernel;
 }
-

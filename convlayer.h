@@ -4,7 +4,6 @@ Conv 2 layer
 Separable conv layer 
 
 */
-#include "stdafx.h"
 #include<time.h>
 #include<stdio.h>
 #ifndef CONV_H
@@ -144,11 +143,11 @@ void convmodule(paratype* graphin, paratype* grahout);
 void conv2layer(IN paratype* graphin, paratype* Conv2W, paratype* Conv2B, OUT paratype* Conv2out);
 
 
-void depthwiselayer(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout,int inputc,int inputH, int depKernel,int depChannel,int depoutH,int depStride);
+void depthwiselayer(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout,const int inputc,const int inputH, const int depKernel,const int depChannel,const int depoutH,const int depStride);
 
-void pointwiselayer_nopad(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout, int inputc, int inputH, int depKernel, int depChannel, int depoutH);
+void pointwiselayer_nopad(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout, const int inputc, const int inputH, const int depKernel, const int depChannel, const int depoutH);
 
-void outlayer_norelu(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout, int inputc, int inputH, int depKernel, int depChannel, int depoutH, int depStride);
+void outlayer_norelu(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout,const int inputc,const int inputH,const int depKernel,const int depChannel,const int depoutH, const int depStride);
 
 //pointwiselayer_nopad_multi2(IN paratype* graphin, paratype* depthwiseW, paratype* depthwiseB, OUT paratype* Convout, int inputc, int inputH, int depKernel, int depChannel, int depoutH, int depStride);
 

@@ -1,7 +1,10 @@
-#include "stdafx.h"
-
+#include<stdio.h>
 #include "convlayer.h"
 #include <cmath>
+#include <time.h>
+#include <sys/time.h>
+#include <time.h>
+
 #define Heatmap_Kernel 1
 #define Heatmap_Channel 17
 #define Heatmap_outH 33
@@ -38,11 +41,12 @@ inline void sigmoidmul(paratype* dataforsigm, int num)
 }
 
 int main()
-{
-	clock_t start, end;
-	float duration;
-	start = clock();
-	
+{       
+        timeval ts_start;
+	timeval ts_curr;
+        timeval ts_end;
+	float timeuse;
+        gettimeofday(&ts_start, NULL);
 	paratype* graphin, * graghout,*graphtest,
 		*heatmap,*offset2, *displacement_fwd, *displacement_bwd,
 		*heatmap_2_weight, *heatmap_2_bias,
@@ -101,23 +105,40 @@ int main()
 
 	graghout = new paratype[convoutsize];
 
-	convmodule(graphin, graghout);
-	end = clock();
+ 	gettimeofday(&ts_end, NULL);
+        timeuse=  float(ts_end.tv_sec - ts_start.tv_sec) +
+                     float(ts_end.tv_usec)*1e-6 - float(ts_start.tv_usec)*1e-6;
+        printf("convoutused:%f\n",timeuse);
+        gettimeofday(&ts_curr, NULL);
 
-	duration = (double)(end - start) / CLOCKS_PER_SEC;
-	printf("convcomplet%lf\n",duration);
+	convmodule(graphin, graghout);
+	printf("convcomplet!\n");
 	
-   //heatmap need sigmoid
+        gettimeofday(&ts_end, NULL);
+        timeuse=  float(ts_end.tv_sec - ts_curr.tv_sec) +
+                     float(ts_end.tv_usec)*1e-6 - float(ts_curr.tv_usec)*1e-6;
+        printf("convoutused:%f\n",timeuse);
+        gettimeofday(&ts_curr, NULL);
+
 	outlayer_norelu(IN graghout, heatmap_2_weight, heatmap_2_bias, heatmap, Conv13_poiChannel, Conv13_poioutH, Heatmap_Kernel, Heatmap_Channel, Heatmap_outH, Heatmap_Stride);
-	sigmoidmul(heatmap, Heatmap_outH*Heatmap_outH*Heatmap_Channel);
 	
+        gettimeofday(&ts_end, NULL);
+        timeuse=  float(ts_end.tv_sec - ts_curr.tv_sec) +
+                     float(ts_end.tv_usec)*1e-6 - float(ts_curr.tv_usec)*1e-6;
+        printf("convoutused:%f\n",timeuse);
+        gettimeofday(&ts_curr, NULL);
+
+        sigmoidmul(heatmap, Heatmap_outH*Heatmap_outH*Heatmap_Channel);
+
 	outlayer_norelu(IN graghout, offset_2_weight, offset_2_bias, offset2, Conv13_poiChannel, Conv13_poioutH, offset_2_Kernel, offset_2_Channel, offset_2_outH, offset_2_Stride);
 
 	outlayer_norelu(IN graghout, displacement_fwd_weight, displacement_fwd_bias, displacement_fwd, Conv13_poiChannel, Conv13_poioutH, disp_Kernel, disp_Channel, disp_outH, disp_Stride);
 
 	outlayer_norelu(IN graghout, displacement_bwd_weight, displacement_bwd_bias, displacement_bwd, Conv13_poiChannel, Conv13_poioutH, disp_Kernel, disp_Channel, disp_outH, disp_Stride);
 
-	int checkoffset = (2*33)* 17;
+        //here we get the four map with format HWC in array
+
+	int checkoffset = (12*33)* 17;
 	int numcheck = 17;
 	printf("networkoutput\n");
 	for (int i = 0; i <numcheck; i++)
@@ -131,9 +152,5 @@ int main()
 		printf("%f,", graphtest[checkoffset + i]);
 
 	}
-	end = clock();
-	duration = (double)(end - start) / CLOCKS_PER_SEC;
-	printf("dep11: %lf\n", duration);
-
 	return 0;
 }
