@@ -135,8 +135,99 @@ inline void relu6mul(paratype* dataforrelu, int num)
 	}
 }
 //this function calculate prod
-inline void tensorprod_norelu(paratype* graph, paratype* convweight, paratype* result,const int prodnum,const int woffset, paratype bias)
+inline void tensorprod_norelu(paratype* graph, paratype* convweight, paratype* result, const int prodnum, paratype bias)
 {
+	paratype product = 0;
+	for (int inindex = 0; inindex<prodnum; inindex += 24)
+	{
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+		product += (*graph) * (*convweight);
+		graph++;
+		convweight++;
+	}
+	*result = product + bias;
+	//printf("from%f\n", product);
+}
+
 	paratype product = 0;
 	for (int inindex = 0; inindex<prodnum; inindex+=24)
 	{
@@ -1310,8 +1401,8 @@ void outlayer_norelu(IN paratype* graphin, paratype* depthwiseW, paratype* depth
 				
 				//shoot
 				//conv and add bias
-				tensorprod_norelu(graphin + (j + hi * inputH)*inputc, depthwiseW + c,
-					Convout + hi * (outoffset) + j * depChannel + c, prodnum, depChannel, depthwiseB[c]);
+					tensorprod_norelu(graphin + (j + hi * inputH)*inputc, depthwiseW + c* inputc,
+					Convout + hi * (outoffset)+j * depChannel + c, prodnum,  depthwiseB[c]);
 
 			}
 		}
